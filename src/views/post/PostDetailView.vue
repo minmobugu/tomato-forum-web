@@ -4,7 +4,11 @@ import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import SidebarCard from '../../components/common/SidebarCard.vue'
+import MetricList from '../../components/common/MetricList.vue'
+import TagList from '../../components/common/TagList.vue'
 import CommentList from '../../components/post/CommentList.vue'
+import PostAuthorSummary from '../../components/post/PostAuthorSummary.vue'
+import PostInteractionActions from '../../components/post/PostInteractionActions.vue'
 import { useCommunityStore } from '../../stores/community'
 import type { Post } from '../../types/community'
 
@@ -35,34 +39,15 @@ onMounted(async () => {
             <span>{{ post.readingTime }}</span>
           </div>
           <h2>{{ post.title }}</h2>
-          <div class="post-detail-card__author">
-            <div class="post-card__avatar-wrap">
-              <img :src="post.author.avatar" :alt="post.author.name" />
-              <span v-if="post.author.isOnline" class="post-card__online-dot"></span>
-            </div>
-            <div>
-              <strong>{{ post.author.name }}</strong>
-              <span>{{ post.author.level }}</span>
-            </div>
-          </div>
+          <PostAuthorSummary class="post-detail-card__author" :author="post.author" />
           <div class="post-detail-toolbar">
-            <button
-              class="post-action-button"
-              :class="{ 'post-action-button--active': interactions[post.id]?.liked }"
-              type="button"
-              @click="store.toggleLike(post.id)"
-            >
-              {{ interactions[post.id]?.liked ? '已点赞' : '点赞' }}
-            </button>
-            <button
-              class="post-action-button"
-              :class="{ 'post-action-button--active': interactions[post.id]?.favorited }"
-              type="button"
-              @click="store.toggleFavorite(post.id)"
-            >
-              {{ interactions[post.id]?.favorited ? '已收藏' : '收藏' }}
-            </button>
-            <button class="post-action-button" type="button">分享</button>
+            <PostInteractionActions
+              :liked="interactions[post.id]?.liked"
+              :favorited="interactions[post.id]?.favorited"
+              show-share
+              @like="store.toggleLike(post.id)"
+              @favorite="store.toggleFavorite(post.id)"
+            />
           </div>
           <section v-if="post.media.length" class="post-detail-media">
             <div v-if="post.media.some((item) => item.type === 'image')" class="post-detail-media__gallery">
@@ -88,15 +73,16 @@ onMounted(async () => {
           <div class="article-body">
             <p v-for="paragraph in post.content" :key="paragraph">{{ paragraph }}</p>
           </div>
-          <div class="tag-list">
-            <span v-for="tag in post.tags" :key="tag"># {{ tag }}</span>
-          </div>
-          <div class="post-detail-card__metrics">
-            <strong>点赞 {{ post.likes }}</strong>
-            <span>评论 {{ post.comments }}</span>
-            <span>收藏 {{ post.favorites }}</span>
-            <span>{{ post.views }} 浏览</span>
-          </div>
+          <TagList :items="post.tags" prefix="#" />
+          <MetricList
+            class="post-detail-card__metrics"
+            :items="[
+              { label: '点赞', value: String(post.likes) },
+              { label: '评论', value: String(post.comments) },
+              { label: '收藏', value: String(post.favorites) },
+              { label: '浏览', value: `${post.views}` },
+            ]"
+          />
         </div>
       </article>
 
@@ -106,26 +92,8 @@ onMounted(async () => {
     <aside class="sidebar-stack">
       <SidebarCard title="作者名片" description="内容与社区身份一览">
         <div class="detail-author-card">
-          <div class="post-card__author">
-            <div class="post-card__avatar-wrap">
-              <img :src="post.author.avatar" :alt="post.author.name" />
-              <span v-if="post.author.isOnline" class="post-card__online-dot"></span>
-            </div>
-            <div>
-              <strong>{{ post.author.name }}</strong>
-              <span>{{ post.author.level }}</span>
-            </div>
-          </div>
-          <div class="metric-list metric-list--single">
-            <div>
-              <strong>{{ post.views }}</strong>
-              <span>总浏览</span>
-            </div>
-            <div>
-              <strong>{{ post.likes }}</strong>
-              <span>本帖点赞</span>
-            </div>
-          </div>
+          <PostAuthorSummary :author="post.author" />
+          <MetricList :items="[{ label: '总浏览', value: post.views }, { label: '本帖点赞', value: String(post.likes) }]" single-column />
         </div>
       </SidebarCard>
 

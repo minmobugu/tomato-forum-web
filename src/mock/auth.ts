@@ -7,6 +7,11 @@ export const mockAuthSession: AuthSession = {
     avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Tomato',
     handle: '@tomato_player',
     phone: '13800000000',
+    username: 'tomato_player',
+    nickname: '小番茄站长',
   },
-  token: 'mock-auth-token',
+  token: {
+    accessToken: 'mock-auth-token',
+    tokenType: 'Bearer',
+  },
 }

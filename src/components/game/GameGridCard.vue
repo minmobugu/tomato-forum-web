@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TagList from '../common/TagList.vue'
 import type { Game } from '../../types/community'
 
 defineProps<{
@@ -24,9 +25,7 @@ defineProps<{
     <div class="game-grid-card__body">
       <h3>{{ game.name }}</h3>
       <p>{{ game.summary }}</p>
-      <div class="tag-list">
-        <span v-for="tag in game.tags" :key="tag">{{ tag }}</span>
-      </div>
+      <TagList :items="game.tags" />
     </div>
   </article>
 </template>

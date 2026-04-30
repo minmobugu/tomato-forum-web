@@ -2,8 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
+import MetricList from '../../components/common/MetricList.vue'
+import FeedTabs from '../../components/common/FeedTabs.vue'
+import InfoPanel from '../../components/common/InfoPanel.vue'
+import SectionHeader from '../../components/common/SectionHeader.vue'
+import SimpleList from '../../components/common/SimpleList.vue'
 import SidebarCard from '../../components/common/SidebarCard.vue'
-import PostCard from '../../components/home/PostCard.vue'
+import PostCard from '../../components/post/PostCard.vue'
 import ProfileSummaryCard from '../../components/profile/ProfileSummaryCard.vue'
 import { useCommunityStore } from '../../stores/community'
 
@@ -25,27 +30,11 @@ onMounted(async () => {
       <ProfileSummaryCard :profile="profile" />
 
       <section class="panel-card profile-tabs-panel">
-        <div class="feed-tabs">
-          <button
-            v-for="tab in tabOptions"
-            :key="tab"
-            class="feed-tabs__item"
-            :class="{ 'feed-tabs__item--active': tab === profileTab }"
-            type="button"
-            @click="profileTab = tab"
-          >
-            {{ tab }}
-          </button>
-        </div>
+        <FeedTabs v-model="profileTab" :tabs="tabOptions" />
       </section>
 
       <section v-if="profileTab === '帖子'" class="content-section">
-        <div class="section-header">
-          <div>
-            <h2>我的帖子</h2>
-            <p>最近发布和持续获得互动的内容</p>
-          </div>
-        </div>
+        <SectionHeader title="我的帖子" subtitle="最近发布和持续获得互动的内容" />
         <div class="post-list">
           <PostCard
             v-for="post in recentPosts"
@@ -58,41 +47,28 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section v-else-if="profileTab === '收藏'" class="panel-card panel-card--soft">
-        <h2>我的收藏</h2>
-        <p>你收藏的攻略、评测和创作会在这里持续沉淀。</p>
-      </section>
+      <InfoPanel
+        v-else-if="profileTab === '收藏'"
+        title="我的收藏"
+        description="你收藏的攻略、评测和创作会在这里持续沉淀。"
+      />
 
-      <section v-else class="panel-card panel-card--soft">
-        <h2>互动记录</h2>
-        <p>查看最近收到的点赞、评论与关注动态。</p>
-      </section>
+      <InfoPanel v-else title="互动记录" description="查看最近收到的点赞、评论与关注动态。" />
     </section>
 
     <aside class="sidebar-stack">
       <SidebarCard title="我的收藏" description="最近保存的高质量内容方向">
-        <ul class="simple-list">
-          <li>《星海远征》开荒路线合集</li>
-          <li>战术回响赛季节奏复盘</li>
-          <li>夜幕工坊营地设计灵感</li>
-        </ul>
+        <SimpleList :items="['《星海远征》开荒路线合集', '战术回响赛季节奏复盘', '夜幕工坊营地设计灵感']" />
       </SidebarCard>
 
       <SidebarCard title="近期互动" description="你的社区活跃摘要">
-        <div class="metric-list">
-          <div>
-            <strong>34</strong>
-            <span>收到评论</span>
-          </div>
-          <div>
-            <strong>126</strong>
-            <span>新增点赞</span>
-          </div>
-          <div>
-            <strong>8</strong>
-            <span>新增收藏</span>
-          </div>
-        </div>
+        <MetricList
+          :items="[
+            { label: '收到评论', value: '34' },
+            { label: '新增点赞', value: '126' },
+            { label: '新增收藏', value: '8' },
+          ]"
+        />
       </SidebarCard>
     </aside>
   </div>

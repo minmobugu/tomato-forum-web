@@ -4,11 +4,15 @@ import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 
 import SidebarCard from '../../components/common/SidebarCard.vue'
+import FilterChipGroup from '../../components/common/FilterChipGroup.vue'
+import SectionHeader from '../../components/common/SectionHeader.vue'
+import MetricList from '../../components/common/MetricList.vue'
+import SimpleList from '../../components/common/SimpleList.vue'
+import TagList from '../../components/common/TagList.vue'
 import GameGridCard from '../../components/game/GameGridCard.vue'
 import EventBanner from '../../components/home/EventBanner.vue'
-import PostCard from '../../components/home/PostCard.vue'
+import PostCard from '../../components/post/PostCard.vue'
 import RankBoard from '../../components/home/RankBoard.vue'
-import SectionHeader from '../../components/home/SectionHeader.vue'
 import { useCommunityStore } from '../../stores/community'
 
 const route = useRoute()
@@ -78,9 +82,7 @@ watch(() => route.query.genre, syncGenreFromRoute)
               <span>{{ spotlightGame.followers }} 关注</span>
               <span>热度 {{ spotlightGame.heat }}</span>
             </div>
-            <div class="tag-list">
-              <span v-for="tag in spotlightGame.tags" :key="tag">{{ tag }}</span>
-            </div>
+            <TagList :items="spotlightGame.tags" />
           </div>
         </article>
 
@@ -108,26 +110,10 @@ watch(() => route.query.genre, syncGenreFromRoute)
             <h2>按类型发现值得长期关注的游戏社区</h2>
             <p class="hero-copy">从热游讨论、赛事内容到创作晒图，把不同风格的游戏圈子整理成清晰入口。</p>
           </div>
-          <div class="metric-list metric-list--single games-page__metrics">
-            <div v-for="metric in overviewMetrics" :key="metric.label">
-              <strong>{{ metric.value }}</strong>
-              <span>{{ metric.label }}</span>
-            </div>
-          </div>
+          <MetricList class="games-page__metrics" :items="overviewMetrics" single-column />
         </div>
 
-        <div class="feed-filter-row">
-          <button
-            v-for="genre in genreOptions"
-            :key="genre"
-            class="filter-chip"
-            :class="{ 'filter-chip--active': genre === activeGenre }"
-            type="button"
-            @click="activeGenre = genre"
-          >
-            {{ genre }}
-          </button>
-        </div>
+        <FilterChipGroup v-model="activeGenre" :options="genreOptions" />
       </section>
 
       <section class="content-section">
@@ -156,11 +142,13 @@ watch(() => route.query.genre, syncGenreFromRoute)
       <RankBoard v-for="group in rankGroups.slice(0, 2)" :key="group.id" :title="group.title" :items="group.items" />
 
       <SidebarCard title="社区观察" description="适合继续深挖的内容方向">
-        <ul class="simple-list">
-          <li>关注热度高但讨论增速快的新专区，容易提前发现潜力社区。</li>
-          <li>赛事型游戏优先看复盘贴和阵容拆解，信息密度更高。</li>
-          <li>创作型游戏多看截图、营地和搭建类帖子，更容易找到圈子氛围。</li>
-        </ul>
+        <SimpleList
+          :items="[
+            '关注热度高但讨论增速快的新专区，容易提前发现潜力社区。',
+            '赛事型游戏优先看复盘贴和阵容拆解，信息密度更高。',
+            '创作型游戏多看截图、营地和搭建类帖子，更容易找到圈子氛围。',
+          ]"
+        />
       </SidebarCard>
     </aside>
   </div>

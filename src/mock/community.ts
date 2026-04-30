@@ -252,6 +252,7 @@ export const posts: Post[] = [
 export const comments: CommentItem[] = [
   {
     id: 1,
+    postId: 101,
     author: {
       id: 11,
       name: '摸鱼指挥官',
@@ -265,6 +266,7 @@ export const comments: CommentItem[] = [
   },
   {
     id: 2,
+    postId: 101,
     author: {
       id: 12,
       name: '晚风开黑组',

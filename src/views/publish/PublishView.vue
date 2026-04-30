@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
 import SidebarCard from '../../components/common/SidebarCard.vue'
+import SimpleList from '../../components/common/SimpleList.vue'
 import TopbarPublishPanel from '../../components/layout/TopbarPublishPanel.vue'
 import { useCommunityStore } from '../../stores/community'
 import type { CreatePostDraft, PostMediaItem } from '../../types/community'
@@ -171,11 +172,13 @@ onBeforeUnmount(() => {
 
     <aside class="sidebar-stack sidebar-stack--compact">
       <SidebarCard title="发布建议" description="更容易获得互动的写法">
-        <ul class="simple-list">
-          <li>标题先说清楚玩法阶段或结论，用户更容易判断是否值得点进来。</li>
-          <li>摘要尽量写出内容价值，例如适用版本、阵容强度或营地思路。</li>
-          <li>正文按段落拆开后会直接写进帖子详情页，适合用来组织步骤和重点。</li>
-        </ul>
+        <SimpleList
+          :items="[
+            '标题先说清楚玩法阶段或结论，用户更容易判断是否值得点进来。',
+            '摘要尽量写出内容价值，例如适用版本、阵容强度或营地思路。',
+            '正文按段落拆开后会直接写进帖子详情页，适合用来组织步骤和重点。',
+          ]"
+        />
       </SidebarCard>
     </aside>
   </div>

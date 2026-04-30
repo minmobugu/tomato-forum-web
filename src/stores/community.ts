@@ -96,7 +96,7 @@ export const useCommunityStore = defineStore('community', () => {
   async function loadPostDetail(id: number) {
     const [post, postComments] = await Promise.all([
       communityService.getPostById(id),
-      communityService.getCommentsByPostId(),
+      communityService.getCommentsByPostId(id),
     ])
 
     comments.value = postComments

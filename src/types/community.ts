@@ -124,6 +124,7 @@ export interface UserProfile {
 
 export interface CommentItem {
   id: number
+  postId: number
   author: Author
   content: string
   publishTime: string

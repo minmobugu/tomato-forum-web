@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SectionHeader from '../common/SectionHeader.vue'
+
 import type { CommentItem } from '../../types/community'
 
 defineProps<{
@@ -8,13 +10,9 @@ defineProps<{
 
 <template>
   <section class="panel-card comments-card">
-    <div class="section-header comments-card__title">
-      <div>
-        <h2>评论区</h2>
-        <p>来自社区玩家的热门讨论</p>
-      </div>
+    <SectionHeader class="comments-card__title" title="评论区" subtitle="来自社区玩家的热门讨论">
       <button class="ghost-button" type="button">参与讨论</button>
-    </div>
+    </SectionHeader>
 
     <div class="comments-card__list">
       <article v-for="comment in comments" :key="comment.id" class="comment-item panel-card panel-card--soft">

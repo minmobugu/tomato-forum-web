@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import MetricList from '../common/MetricList.vue'
+import TagList from '../common/TagList.vue'
 import type { UserProfile } from '../../types/community'
 
 defineProps<{
@@ -19,24 +21,15 @@ defineProps<{
     <div class="profile-summary__badges">
       <span v-for="badge in profile.badges" :key="badge" class="profile-badge">{{ badge }}</span>
     </div>
-    <div class="profile-summary__stats">
-      <div v-for="stat in profile.stats" :key="stat.label">
-        <strong>{{ stat.value }}</strong>
-        <span>{{ stat.label }}</span>
-      </div>
-    </div>
+    <MetricList class="profile-summary__stats" :items="profile.stats" />
     <div class="profile-summary__traits">
       <div>
         <small>常玩游戏</small>
-        <div class="tag-list">
-          <span v-for="game in profile.favoriteGames" :key="game">{{ game }}</span>
-        </div>
+        <TagList :items="profile.favoriteGames" />
       </div>
       <div>
         <small>玩家标签</small>
-        <div class="tag-list">
-          <span v-for="trait in profile.traits" :key="trait">{{ trait }}</span>
-        </div>
+        <TagList :items="profile.traits" />
       </div>
     </div>
   </section>

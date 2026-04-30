@@ -3,7 +3,14 @@ import { defineStore } from 'pinia'
 import type { RouteLocationRaw, Router } from 'vue-router'
 
 import { authService } from '../services/auth'
-import type { AuthMode, AuthSession, LoginWithCodePayload, LoginWithPasswordPayload } from '../types/auth'
+import type {
+  AuthMode,
+  AuthSession,
+  LoginWithCodePayload,
+  LoginWithPasswordPayload,
+  SmsCodeSendResult,
+} from '../types/auth'
+import { readStoredAuthSession, writeStoredAuthSession } from '../utils/authSession'
 
 export const useAuthStore = defineStore('auth', () => {
   const currentSession = ref<AuthSession | null>(null)
@@ -13,9 +20,18 @@ export const useAuthStore = defineStore('auth', () => {
   const isSubmitting = ref(false)
   const authErrorMessage = ref('')
   const redirectTarget = ref<RouteLocationRaw | null>(null)
+  const lastSmsCodeResult = ref<SmsCodeSendResult | null>(null)
 
-  const isAuthenticated = computed(() => Boolean(currentSession.value))
+  const isAuthenticated = computed(() => Boolean(currentSession.value?.token.accessToken))
   const currentUser = computed(() => currentSession.value?.user ?? null)
+
+  function persistCurrentSession() {
+    writeStoredAuthSession(currentSession.value)
+  }
+
+  function restoreSession() {
+    currentSession.value = readStoredAuthSession()
+  }
 
   function openAuthModal(targetRoute?: RouteLocationRaw) {
     if (targetRoute) {
@@ -41,7 +57,7 @@ export const useAuthStore = defineStore('auth', () => {
     authErrorMessage.value = ''
 
     try {
-      await authService.sendCode(phone)
+      lastSmsCodeResult.value = await authService.sendCode(phone)
     }
     catch (error) {
       authErrorMessage.value = error instanceof Error ? error.message : '发送验证码失败'
@@ -55,6 +71,7 @@ export const useAuthStore = defineStore('auth', () => {
   function completeLogin(session: AuthSession) {
     authErrorMessage.value = ''
     currentSession.value = session
+    persistCurrentSession()
     isAuthModalOpen.value = false
   }
 
@@ -104,12 +121,24 @@ export const useAuthStore = defineStore('auth', () => {
     await router.push({ name: 'profile' })
   }
 
-  function logout() {
+  async function logout() {
     authErrorMessage.value = ''
-    currentSession.value = null
-    redirectTarget.value = null
-    isAuthModalOpen.value = false
-    authMode.value = 'code'
+
+    try {
+      await authService.logout()
+    }
+    catch (error) {
+      authErrorMessage.value = error instanceof Error ? error.message : '退出登录失败'
+      throw error
+    }
+    finally {
+      currentSession.value = null
+      redirectTarget.value = null
+      isAuthModalOpen.value = false
+      authMode.value = 'code'
+      lastSmsCodeResult.value = null
+      persistCurrentSession()
+    }
   }
 
   return {
@@ -125,9 +154,11 @@ export const useAuthStore = defineStore('auth', () => {
     isSubmitting,
     loginWithCode,
     loginWithPassword,
+    lastSmsCodeResult,
     logout,
     openAuthModal,
     redirectTarget,
+    restoreSession,
     resumeProtectedNavigation,
     sendVerificationCode,
     switchAuthMode,

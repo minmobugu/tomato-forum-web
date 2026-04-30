@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SectionHeader from '../common/SectionHeader.vue'
+
 defineProps<{
   title: string
   items: Array<{
@@ -13,12 +15,7 @@ defineProps<{
 
 <template>
   <section class="rank-board panel-card">
-    <div class="section-header rank-board__header">
-      <div>
-        <h3>{{ title }}</h3>
-        <p>社区实时热度追踪</p>
-      </div>
-    </div>
+    <SectionHeader class="rank-board__header" :title="title" subtitle="社区实时热度追踪" level="h3" />
 
     <div class="rank-board__list">
       <article v-for="(item, index) in items" :key="item.id" class="rank-item">

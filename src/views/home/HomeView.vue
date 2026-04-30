@@ -4,14 +4,17 @@ import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
 
 import SidebarCard from '../../components/common/SidebarCard.vue'
+import FilterChipGroup from '../../components/common/FilterChipGroup.vue'
+import FeedTabs from '../../components/common/FeedTabs.vue'
+import MetricList from '../../components/common/MetricList.vue'
+import SectionHeader from '../../components/common/SectionHeader.vue'
+import TagList from '../../components/common/TagList.vue'
 import ChannelEntryCard from '../../components/home/ChannelEntryCard.vue'
 import EventBanner from '../../components/home/EventBanner.vue'
-import FeedTabs from '../../components/home/FeedTabs.vue'
 import GameSpotlightCard from '../../components/home/GameSpotlightCard.vue'
 import HeroFeatureCard from '../../components/home/HeroFeatureCard.vue'
-import PostCard from '../../components/home/PostCard.vue'
+import PostCard from '../../components/post/PostCard.vue'
 import RankBoard from '../../components/home/RankBoard.vue'
-import SectionHeader from '../../components/home/SectionHeader.vue'
 import { useCommunityStore } from '../../stores/community'
 
 const route = useRoute()
@@ -77,21 +80,10 @@ watch(() => route.query.channel, syncChannelFromRoute)
 
       <section class="content-section">
         <SectionHeader title="社区动态" subtitle="精选、热门与最新内容实时更新">
-          <FeedTabs v-model="activeFeed" @update:model-value="store.setActiveFeed" />
+          <FeedTabs v-model="activeFeed" />
         </SectionHeader>
 
-        <div class="feed-filter-row">
-          <button
-            v-for="channel in channelOptions"
-            :key="channel"
-            class="filter-chip"
-            :class="{ 'filter-chip--active': channel === activeChannel }"
-            type="button"
-            @click="store.setActiveChannel(channel)"
-          >
-            {{ channel }}
-          </button>
-        </div>
+        <FilterChipGroup :options="channelOptions" :model-value="activeChannel" @update:model-value="store.setActiveChannel" />
 
         <div class="post-list">
           <PostCard
@@ -115,31 +107,17 @@ watch(() => route.query.channel, syncChannelFromRoute)
       />
 
       <SidebarCard title="今日数据" description="社区内容保持活跃增长">
-        <div class="metric-list">
-          <div>
-            <strong>4.8k</strong>
-            <span>新增评论</span>
-          </div>
-          <div>
-            <strong>1.2k</strong>
-            <span>新帖子</span>
-          </div>
-          <div>
-            <strong>87%</strong>
-            <span>内容互动率</span>
-          </div>
-        </div>
+        <MetricList
+          :items="[
+            { label: '新增评论', value: '4.8k' },
+            { label: '新帖子', value: '1.2k' },
+            { label: '内容互动率', value: '87%' },
+          ]"
+        />
       </SidebarCard>
 
       <SidebarCard title="热门标签" description="看看大家正在讨论什么">
-        <div class="tag-list">
-          <span>版本前瞻</span>
-          <span>联机开黑</span>
-          <span>地图探索</span>
-          <span>配装思路</span>
-          <span>截图分享</span>
-          <span>赛事复盘</span>
-        </div>
+        <TagList :items="['版本前瞻', '联机开黑', '地图探索', '配装思路', '截图分享', '赛事复盘']" />
       </SidebarCard>
     </aside>
   </div>
