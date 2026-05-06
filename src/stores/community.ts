@@ -2,6 +2,8 @@ import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { communityService } from '../services/community'
+import { useAuthStore } from './auth'
+import { pinia } from './pinia'
 import type {
   CommentItem,
   CommunityEvent,
@@ -15,6 +17,70 @@ import type {
   UserProfile,
 } from '../types/community'
 
+type FeedType = '推荐' | '热门' | '最新'
+
+function createDefaultInteraction(): PostInteractionState {
+  return {
+    liked: false,
+    disliked: false,
+    favorited: false,
+  }
+}
+
+function upsertPost(posts: Post[], nextPost: Post) {
+  const currentIndex = posts.findIndex((post) => post.id === nextPost.id)
+  if (currentIndex === -1) {
+    return [nextPost, ...posts]
+  }
+
+  const nextPosts = posts.slice()
+  nextPosts[currentIndex] = nextPost
+  return nextPosts
+}
+
+function appendReply(items: CommentItem[], targetCommentId: number, reply: CommentItem): CommentItem[] {
+  return items.map((comment) => {
+    if (comment.id === targetCommentId) {
+      return {
+        ...comment,
+        replyCount: comment.replyCount + 1,
+        replies: [...comment.replies, reply],
+      }
+    }
+
+    if (!comment.replies.length) {
+      return comment
+    }
+
+    return {
+      ...comment,
+      replies: appendReply(comment.replies, targetCommentId, reply),
+    }
+  })
+}
+
+function updatePostCounters(posts: Post[], payload: {
+  postId: number
+  commentCount: number
+  likeCount: number
+  dislikeCount: number
+  favoriteCount: number
+}) {
+  return posts.map((post) => {
+    if (post.id !== payload.postId) {
+      return post
+    }
+
+    return {
+      ...post,
+      comments: payload.commentCount,
+      likes: payload.likeCount,
+      dislikes: payload.dislikeCount,
+      favorites: payload.favoriteCount,
+    }
+  })
+}
+
 export const useCommunityStore = defineStore('community', () => {
   const heroFeature = ref<HeroFeature | null>(null)
   const feedChannels = ref<FeedChannel[]>([])
@@ -25,44 +91,61 @@ export const useCommunityStore = defineStore('community', () => {
   const comments = ref<CommentItem[]>([])
   const profile = ref<UserProfile | null>(null)
   const topbarMessages = ref<TopbarMessage[]>([])
-  const activeFeed = ref<'推荐' | '热门' | '最新'>('推荐')
+  const activeFeed = ref<FeedType>('推荐')
   const activeChannel = ref('全部')
   const interactions = ref<Record<number, PostInteractionState>>({})
+  const isPostsLoading = ref(false)
+  const isSubmittingPost = ref(false)
+  const isSubmittingComment = ref(false)
 
   const trendingPosts = computed(() => posts.value.slice().sort((a, b) => b.likes - a.likes))
-  const latestPosts = computed(() => posts.value.slice().reverse())
-  const filteredPosts = computed(() => {
-    if (activeChannel.value === '全部') {
-      return posts.value
-    }
-
-    return posts.value.filter(
-      (post) => post.topic.includes(activeChannel.value) || post.tags.includes(activeChannel.value),
-    )
-  })
-  const visiblePosts = computed(() => {
-    const source = filteredPosts.value
-
-    if (activeFeed.value === '热门') {
-      return source.slice().sort((a, b) => b.likes - a.likes)
-    }
-
-    if (activeFeed.value === '最新') {
-      return source.slice().reverse()
-    }
-
-    return source
-  })
+  const latestPosts = computed(() => posts.value.slice())
+  const filteredPosts = computed(() => posts.value)
+  const visiblePosts = computed(() => posts.value)
   const unreadMessageCount = computed(() => topbarMessages.value.filter((message) => !message.isRead).length)
 
+  function resolveSortType() {
+    return activeFeed.value === '热门' ? 'HOT' : 'LATEST'
+  }
+
+  function ensureInteraction(postId: number) {
+    if (!interactions.value[postId]) {
+      interactions.value[postId] = createDefaultInteraction()
+    }
+
+    return interactions.value[postId]
+  }
+
+  function syncInteractions(nextPosts: Post[]) {
+    for (const post of nextPosts) {
+      ensureInteraction(post.id)
+    }
+  }
+
+  async function loadPosts() {
+    isPostsLoading.value = true
+
+    try {
+      const nextPosts = await communityService.getPosts({
+        channel: activeChannel.value,
+        sortType: resolveSortType(),
+      })
+
+      posts.value = nextPosts
+      syncInteractions(nextPosts)
+    }
+    finally {
+      isPostsLoading.value = false
+    }
+  }
+
   async function bootstrapHome() {
-    const [heroData, channelsData, rankData, eventsData, gamesData, postsData] = await Promise.all([
+    const [heroData, channelsData, rankData, eventsData, gamesData] = await Promise.all([
       communityService.getHeroFeature(),
       communityService.getFeedChannels(),
       communityService.getRankGroups(),
       communityService.getCommunityEvents(),
       communityService.getFeaturedGames(),
-      communityService.getPosts(),
     ])
 
     heroFeature.value = heroData
@@ -70,13 +153,8 @@ export const useCommunityStore = defineStore('community', () => {
     rankGroups.value = rankData
     communityEvents.value = eventsData
     featuredGames.value = gamesData
-    posts.value = postsData
 
-    for (const post of postsData) {
-      if (!interactions.value[post.id]) {
-        interactions.value[post.id] = { liked: false, favorited: false }
-      }
-    }
+    await loadPosts()
   }
 
   async function loadTopbarData() {
@@ -100,6 +178,9 @@ export const useCommunityStore = defineStore('community', () => {
     ])
 
     comments.value = postComments
+    posts.value = upsertPost(posts.value, post)
+    ensureInteraction(post.id)
+
     return post
   }
 
@@ -107,12 +188,14 @@ export const useCommunityStore = defineStore('community', () => {
     profile.value = await communityService.getProfile()
   }
 
-  function setActiveFeed(feed: '推荐' | '热门' | '最新') {
+  function setActiveFeed(feed: FeedType) {
     activeFeed.value = feed
+    void loadPosts()
   }
 
   function setActiveChannel(channel: string) {
     activeChannel.value = channel
+    void loadPosts()
   }
 
   function markMessageRead(messageId: number) {
@@ -122,70 +205,121 @@ export const useCommunityStore = defineStore('community', () => {
     message.isRead = true
   }
 
-  function publishPost(draft: CreatePostDraft) {
-    const currentProfile = profile.value
-    const nextId = Math.max(...posts.value.map((post) => post.id), 100) + 1
-    const content = draft.content
-      .split('\n')
-      .map((paragraph) => paragraph.trim())
-      .filter(Boolean)
-    const media = [...draft.images, ...draft.videos]
-    const fallbackCover =
-      featuredGames.value.find((game) => game.name === draft.game)?.cover ??
-      featuredGames.value[0]?.cover ??
-      ''
-    const cover = draft.images[0]?.url ?? draft.videos[0]?.poster ?? fallbackCover
+  async function publishPost(draft: CreatePostDraft) {
+    isSubmittingPost.value = true
 
-    const post: Post = {
-      id: nextId,
-      title: draft.title,
-      summary: draft.summary,
-      cover,
-      game: draft.game,
-      topic: draft.topic,
-      author: {
-        id: 999,
-        name: currentProfile?.name ?? '小番茄站长',
-        avatar:
-          currentProfile?.avatar ?? 'https://api.dicebear.com/9.x/adventurer/svg?seed=TomatoPublisher',
-        level: 'Lv.28',
-        isOnline: true,
-      },
-      publishTime: '刚刚',
-      content: content.length ? content : [draft.content],
-      media,
-      likes: 0,
-      comments: 0,
-      favorites: 0,
-      views: '0',
-      readingTime: `${Math.max(1, Math.ceil(draft.content.length / 120))} 分钟`,
-      tags: [draft.topic, draft.game, '新发布'],
-      featured: false,
+    try {
+      const post = await communityService.createPost(draft)
+      posts.value = upsertPost(posts.value, post)
+      ensureInteraction(post.id)
+      return post
+    }
+    finally {
+      isSubmittingPost.value = false
+    }
+  }
+
+  function requireAuth() {
+    const authStore = useAuthStore(pinia)
+    if (authStore.isAuthenticated) {
+      return true
     }
 
-    posts.value = [post, ...posts.value]
-    interactions.value[post.id] = { liked: false, favorited: false }
-
-    return post
+    authStore.openAuthModal()
+    return false
   }
 
-  function toggleLike(postId: number) {
-    const current = interactions.value[postId]
-    if (!current) return
-
-    current.liked = !current.liked
+  function applyInteractionUpdate(payload: {
+    postId: number
+    commentCount: number
+    likeCount: number
+    dislikeCount: number
+    favoriteCount: number
+    liked: boolean
+    disliked: boolean
+    favorited: boolean
+  }) {
+    posts.value = updatePostCounters(posts.value, payload)
+    interactions.value[payload.postId] = {
+      liked: payload.liked,
+      disliked: payload.disliked,
+      favorited: payload.favorited,
+    }
   }
 
-  function toggleFavorite(postId: number) {
-    const current = interactions.value[postId]
-    if (!current) return
+  async function toggleLike(postId: number) {
+    if (!requireAuth()) {
+      return
+    }
 
-    current.favorited = !current.favorited
+    const result = await communityService.toggleLike(postId, ensureInteraction(postId))
+    applyInteractionUpdate(result)
+  }
+
+  async function toggleDislike(postId: number) {
+    if (!requireAuth()) {
+      return
+    }
+
+    const result = await communityService.toggleDislike(postId, ensureInteraction(postId))
+    applyInteractionUpdate(result)
+  }
+
+  async function toggleFavorite(postId: number) {
+    if (!requireAuth()) {
+      return
+    }
+
+    const result = await communityService.toggleFavorite(postId, ensureInteraction(postId))
+    applyInteractionUpdate(result)
+  }
+
+  async function submitComment(postId: number, content: string) {
+    if (!requireAuth()) {
+      return null
+    }
+
+    isSubmittingComment.value = true
+
+    try {
+      const comment = await communityService.createComment(postId, content)
+      comments.value = [comment, ...comments.value]
+      const post = posts.value.find((item) => item.id === postId)
+      if (post) {
+        post.comments += 1
+      }
+      return comment
+    }
+    finally {
+      isSubmittingComment.value = false
+    }
+  }
+
+  async function submitReply(postId: number, commentId: number, content: string) {
+    if (!requireAuth()) {
+      return null
+    }
+
+    isSubmittingComment.value = true
+
+    try {
+      const reply = await communityService.replyComment(postId, commentId, content)
+      comments.value = appendReply(comments.value, commentId, reply)
+      const post = posts.value.find((item) => item.id === postId)
+      if (post) {
+        post.comments += 1
+      }
+      return reply
+    }
+    finally {
+      isSubmittingComment.value = false
+    }
   }
 
   return {
     activeChannel,
     activeFeed,
+    bootstrapHome,
     comments,
     communityEvents,
     feedChannels,
@@ -193,8 +327,12 @@ export const useCommunityStore = defineStore('community', () => {
     filteredPosts,
     heroFeature,
     interactions,
+    isPostsLoading,
+    isSubmittingComment,
+    isSubmittingPost,
     latestPosts,
     loadPostDetail,
+    loadPosts,
     loadProfile,
     loadTopbarData,
     markMessageRead,
@@ -204,7 +342,9 @@ export const useCommunityStore = defineStore('community', () => {
     rankGroups,
     setActiveChannel,
     setActiveFeed,
-    bootstrapHome,
+    submitComment,
+    submitReply,
+    toggleDislike,
     toggleFavorite,
     toggleLike,
     topbarMessages,

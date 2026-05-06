@@ -20,12 +20,14 @@ export interface Post {
   summary: string
   cover: string
   game: string
+  channel: string
   topic: string
   author: Author
   publishTime: string
   content: string[]
   media: PostMediaItem[]
   likes: number
+  dislikes: number
   comments: number
   favorites: number
   views: string
@@ -71,6 +73,7 @@ export interface TopbarMessage {
 export interface CreatePostDraft {
   title: string
   game: string
+  channel: string
   topic: string
   summary: string
   content: string
@@ -125,13 +128,20 @@ export interface UserProfile {
 export interface CommentItem {
   id: number
   postId: number
+  parentCommentId: number | null
+  rootCommentId: number | null
+  replyUserId: number | null
   author: Author
   content: string
   publishTime: string
   likes: number
+  replyCount: number
+  commentLevel: 'ROOT' | 'REPLY'
+  replies: CommentItem[]
 }
 
 export interface PostInteractionState {
   liked: boolean
+  disliked: boolean
   favorited: boolean
 }

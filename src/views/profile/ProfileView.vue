@@ -42,6 +42,7 @@ onMounted(async () => {
             :post="post"
             :interaction="interactions[post.id]"
             @like="store.toggleLike"
+            @dislike="store.toggleDislike"
             @favorite="store.toggleFavorite"
           />
         </div>

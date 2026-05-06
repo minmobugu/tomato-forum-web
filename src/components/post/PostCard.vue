@@ -11,6 +11,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   like: [postId: number]
+  dislike: [postId: number]
   favorite: [postId: number]
 }>()
 
@@ -20,6 +21,10 @@ function onLikeClick() {
 
 function onFavoriteClick() {
   emit('favorite', props.post.id)
+}
+
+function onDislikeClick() {
+  emit('dislike', props.post.id)
 }
 </script>
 
@@ -37,7 +42,7 @@ function onFavoriteClick() {
 
     <div class="post-card__content">
       <div class="post-card__meta">
-        <span class="pill">{{ post.topic }}</span>
+        <span class="pill">{{ post.channel }}</span>
         <span>{{ post.game }}</span>
         <span>{{ post.publishTime }}</span>
       </div>
@@ -55,14 +60,17 @@ function onFavoriteClick() {
 
         <PostInteractionActions
           :liked="interaction?.liked"
+          :disliked="interaction?.disliked"
           :favorited="interaction?.favorited"
           @like="onLikeClick"
+          @dislike="onDislikeClick"
           @favorite="onFavoriteClick"
         />
       </div>
 
       <div class="post-card__metrics">
         <span>赞 {{ post.likes }}</span>
+        <span>踩 {{ post.dislikes }}</span>
         <span>评 {{ post.comments }}</span>
         <span>藏 {{ post.favorites }}</span>
       </div>

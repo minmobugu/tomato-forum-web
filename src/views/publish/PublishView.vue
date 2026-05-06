@@ -15,10 +15,11 @@ const VIDEO_POSTER = 'https://images.unsplash.com/photo-1511512578047-dfb3670464
 
 const router = useRouter()
 const store = useCommunityStore()
-const { featuredGames } = storeToRefs(store)
+const { featuredGames, feedChannels, isSubmittingPost } = storeToRefs(store)
 const draft = ref<CreatePostDraft>({
   title: '',
   game: '',
+  channel: '',
   topic: '',
   summary: '',
   content: '',
@@ -27,6 +28,7 @@ const draft = ref<CreatePostDraft>({
 })
 
 const gameNames = computed(() => featuredGames.value.map((game) => game.name))
+const channelNames = computed(() => feedChannels.value.map((channel) => channel.name))
 
 function revokeMediaUrls(items: PostMediaItem[]) {
   for (const item of items) {
@@ -43,6 +45,7 @@ function resetDraft() {
   draft.value = {
     title: '',
     game: gameNames.value[0] ?? '',
+    channel: channelNames.value[0] ?? '',
     topic: '',
     summary: '',
     content: '',
@@ -124,14 +127,15 @@ function removeVideo(mediaId: string) {
 
 async function handleSubmit() {
   const currentDraft = draft.value
-  if (!currentDraft.title || !currentDraft.game || !currentDraft.topic || !currentDraft.summary || !currentDraft.content) {
+  if (!currentDraft.title || !currentDraft.game || !currentDraft.channel || !currentDraft.summary) {
     return
   }
 
-  const post = store.publishPost(currentDraft)
+  const post = await store.publishPost(currentDraft)
   draft.value = {
     title: '',
     game: gameNames.value[0] ?? '',
+    channel: channelNames.value[0] ?? '',
     topic: '',
     summary: '',
     content: '',
@@ -142,7 +146,7 @@ async function handleSubmit() {
 }
 
 onMounted(async () => {
-  if (!featuredGames.value.length) {
+  if (!featuredGames.value.length || !feedChannels.value.length) {
     await store.bootstrapHome()
   }
 
@@ -161,6 +165,7 @@ onBeforeUnmount(() => {
       <TopbarPublishPanel
         :draft="draft"
         :games="gameNames"
+        :channels="channelNames"
         @add-images="appendImages"
         @add-videos="appendVideos"
         @remove-image="removeImage"
@@ -168,6 +173,7 @@ onBeforeUnmount(() => {
         @update="updateDraft"
         @submit="handleSubmit"
       />
+      <p v-if="isSubmittingPost" class="publish-page__status">正在提交帖子…</p>
     </section>
 
     <aside class="sidebar-stack sidebar-stack--compact">

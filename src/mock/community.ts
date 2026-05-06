@@ -168,6 +168,7 @@ export const posts: Post[] = [
     summary: '我把主线、资源点和前期舰船升级顺序整理成一套效率更高的路线，适合刚入坑的新手和回流玩家。',
     cover: 'https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&w=1200&q=80',
     game: '星海远征',
+    channel: '攻略',
     topic: '开荒攻略',
     author: {
       id: 1,
@@ -184,6 +185,7 @@ export const posts: Post[] = [
     ],
     media: [],
     likes: 1280,
+    dislikes: 12,
     comments: 216,
     favorites: 389,
     views: '3.4万',
@@ -197,6 +199,7 @@ export const posts: Post[] = [
     summary: '从地图目标刷新机制、辅助位节奏和团战容错率三个角度，拆一下版本答案背后的逻辑。',
     cover: 'https://images.unsplash.com/photo-1511882150382-421056c89033?auto=format&fit=crop&w=1200&q=80',
     game: '战术回响',
+    channel: '赛事',
     topic: '赛事分析',
     author: {
       id: 2,
@@ -213,6 +216,7 @@ export const posts: Post[] = [
     ],
     media: [],
     likes: 960,
+    dislikes: 8,
     comments: 148,
     favorites: 274,
     views: '2.1万',
@@ -225,6 +229,7 @@ export const posts: Post[] = [
     summary: '试了很多灯光和材质组合后，我总结出一套很适合夜景截图的据点搭建思路。',
     cover: 'https://images.unsplash.com/photo-1514329926535-7f6db2f6b2b1?auto=format&fit=crop&w=1200&q=80',
     game: '夜幕工坊',
+    channel: '截图',
     topic: '创作分享',
     author: {
       id: 3,
@@ -241,6 +246,7 @@ export const posts: Post[] = [
     ],
     media: [],
     likes: 1540,
+    dislikes: 5,
     comments: 301,
     favorites: 622,
     views: '4.9万',
@@ -253,6 +259,9 @@ export const comments: CommentItem[] = [
   {
     id: 1,
     postId: 101,
+    parentCommentId: null,
+    rootCommentId: null,
+    replyUserId: null,
     author: {
       id: 11,
       name: '摸鱼指挥官',
@@ -263,10 +272,37 @@ export const comments: CommentItem[] = [
     content: '照着你的路线打了两小时，资源确实顺很多，感谢分享。',
     publishTime: '40 分钟前',
     likes: 34,
+    replyCount: 1,
+    commentLevel: 'ROOT',
+    replies: [
+      {
+        id: 3,
+        postId: 101,
+        parentCommentId: 1,
+        rootCommentId: 1,
+        replyUserId: 11,
+        author: {
+          id: 13,
+          name: '补给站管理员',
+          avatar: 'https://api.dicebear.com/9.x/adventurer/svg?seed=Supply',
+          level: 'Lv.9',
+          isOnline: false,
+        },
+        content: '同感，这版资源分配比之前友好多了。',
+        publishTime: '25 分钟前',
+        likes: 8,
+        replyCount: 0,
+        commentLevel: 'REPLY',
+        replies: [],
+      },
+    ],
   },
   {
     id: 2,
     postId: 101,
+    parentCommentId: null,
+    rootCommentId: null,
+    replyUserId: null,
     author: {
       id: 12,
       name: '晚风开黑组',
@@ -277,6 +313,9 @@ export const comments: CommentItem[] = [
     content: '多人队伍里安排一个制造专精真的很关键，我们昨天就踩坑了。',
     publishTime: '1 小时前',
     likes: 22,
+    replyCount: 0,
+    commentLevel: 'ROOT',
+    replies: [],
   },
 ]
 

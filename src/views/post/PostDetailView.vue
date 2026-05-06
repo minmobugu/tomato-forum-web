@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
@@ -14,15 +14,38 @@ import type { Post } from '../../types/community'
 
 const route = useRoute()
 const store = useCommunityStore()
-const { comments, interactions, posts } = storeToRefs(store)
+const { comments, interactions, isSubmittingComment, posts } = storeToRefs(store)
 const post = ref<Post | null>(null)
 
 const postId = computed(() => Number(route.params.id))
 const relatedPosts = computed(() => posts.value.filter((item) => item.id !== postId.value).slice(0, 2))
 
-onMounted(async () => {
+async function loadCurrentPost() {
   await store.bootstrapHome()
   post.value = await store.loadPostDetail(postId.value)
+}
+
+async function handleCommentSubmit(content: string) {
+  if (!post.value) {
+    return
+  }
+
+  await store.submitComment(post.value.id, content)
+  post.value = posts.value.find((item) => item.id === post.value?.id) ?? post.value
+}
+
+async function handleReplySubmit(commentId: number, content: string) {
+  if (!post.value) {
+    return
+  }
+
+  await store.submitReply(post.value.id, commentId, content)
+  post.value = posts.value.find((item) => item.id === post.value?.id) ?? post.value
+}
+
+onMounted(loadCurrentPost)
+watch(postId, () => {
+  void loadCurrentPost()
 })
 </script>
 
@@ -33,7 +56,7 @@ onMounted(async () => {
         <img :src="post.cover" :alt="post.title" class="post-detail-card__cover" />
         <div class="post-detail-card__body">
           <div class="post-detail-card__meta">
-            <span class="pill">{{ post.topic }}</span>
+            <span class="pill">{{ post.channel }}</span>
             <span>{{ post.game }}</span>
             <span>{{ post.publishTime }}</span>
             <span>{{ post.readingTime }}</span>
@@ -43,9 +66,11 @@ onMounted(async () => {
           <div class="post-detail-toolbar">
             <PostInteractionActions
               :liked="interactions[post.id]?.liked"
+              :disliked="interactions[post.id]?.disliked"
               :favorited="interactions[post.id]?.favorited"
               show-share
               @like="store.toggleLike(post.id)"
+              @dislike="store.toggleDislike(post.id)"
               @favorite="store.toggleFavorite(post.id)"
             />
           </div>
@@ -78,6 +103,7 @@ onMounted(async () => {
             class="post-detail-card__metrics"
             :items="[
               { label: '点赞', value: String(post.likes) },
+              { label: '点踩', value: String(post.dislikes) },
               { label: '评论', value: String(post.comments) },
               { label: '收藏', value: String(post.favorites) },
               { label: '浏览', value: `${post.views}` },
@@ -86,14 +112,26 @@ onMounted(async () => {
         </div>
       </article>
 
-      <CommentList :comments="comments" />
+      <CommentList
+        :comments="comments"
+        :is-submitting="isSubmittingComment"
+        @submit="handleCommentSubmit"
+        @reply="handleReplySubmit"
+      />
     </section>
 
     <aside class="sidebar-stack">
       <SidebarCard title="作者名片" description="内容与社区身份一览">
         <div class="detail-author-card">
           <PostAuthorSummary :author="post.author" />
-          <MetricList :items="[{ label: '总浏览', value: post.views }, { label: '本帖点赞', value: String(post.likes) }]" single-column />
+          <MetricList
+            :items="[
+              { label: '总浏览', value: post.views },
+              { label: '本帖点赞', value: String(post.likes) },
+              { label: '本帖点踩', value: String(post.dislikes) },
+            ]"
+            single-column
+          />
         </div>
       </SidebarCard>
 

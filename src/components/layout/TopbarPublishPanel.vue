@@ -4,6 +4,7 @@ import type { CreatePostDraft } from '../../types/community'
 defineProps<{
   draft: CreatePostDraft
   games: string[]
+  channels: string[]
 }>()
 
 const emit = defineEmits<{
@@ -50,6 +51,14 @@ function handleVideoChange(event: Event) {
           <select :value="draft.game" @change="emit('update', 'game', ($event.target as HTMLSelectElement).value)">
             <option value="">选择游戏</option>
             <option v-for="game in games" :key="game" :value="game">{{ game }}</option>
+          </select>
+        </label>
+
+        <label class="topbar-field">
+          <span>频道</span>
+          <select :value="draft.channel" @change="emit('update', 'channel', ($event.target as HTMLSelectElement).value)">
+            <option value="">选择频道</option>
+            <option v-for="channel in channels" :key="channel" :value="channel">{{ channel }}</option>
           </select>
         </label>
 
