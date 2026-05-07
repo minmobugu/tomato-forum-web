@@ -7,13 +7,16 @@ import AuthModal from '../components/auth/AuthModal.vue'
 import TopbarSearchPanel from '../components/layout/TopbarSearchPanel.vue'
 import { useAuthStore } from '../stores/auth'
 import { useCommunityStore } from '../stores/community'
+import { useImStore } from '../stores/im'
 import type { AuthMode } from '../types/auth'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCommunityStore()
+const imStore = useImStore()
 const authStore = useAuthStore()
 const { feedChannels, featuredGames, posts, profile, unreadMessageCount } = storeToRefs(store)
+const { totalUnreadCount: unreadChatCount } = storeToRefs(imStore)
 const { authErrorMessage, authMode, currentUser, isAuthenticated, isAuthModalOpen, isSendingCode, isSubmitting } = storeToRefs(authStore)
 
 const topbarRef = ref<HTMLElement | null>(null)
@@ -28,6 +31,7 @@ const panelOffsetTop = ref(72)
 const panelOffsetLeft = ref(16)
 const panelWidth = ref(0)
 const topbarHeight = ref(64)
+const unifiedUnreadCount = computed(() => unreadMessageCount.value + unreadChatCount.value)
 
 const pageTitle = computed(() => {
   if (route.name === 'games') return '探索热门游戏专区'
@@ -311,10 +315,22 @@ onMounted(() => {
   handleScroll()
   updateSearchLayerPosition()
   store.loadTopbarData()
+  if (isAuthenticated.value) {
+    imStore.bootstrapConversations().catch(() => {})
+  }
   window.addEventListener('scroll', handleViewportChange, { passive: true })
   window.addEventListener('resize', handleViewportChange)
   window.addEventListener('keydown', handleEscape)
   window.addEventListener('pointerdown', handlePointerDown)
+})
+
+watch(isAuthenticated, (value) => {
+  if (value) {
+    imStore.bootstrapConversations().catch(() => {})
+    return
+  }
+
+  imStore.resetState()
 })
 
 onBeforeUnmount(() => {
@@ -360,7 +376,7 @@ onBeforeUnmount(() => {
             @click="openMessagesPage"
           >
             消息
-            <span v-if="unreadMessageCount" class="topbar-badge">{{ unreadMessageCount }}</span>
+            <span v-if="unifiedUnreadCount" class="topbar-badge">{{ unifiedUnreadCount }}</span>
           </button>
           <button
             class="primary-button topbar-trigger"

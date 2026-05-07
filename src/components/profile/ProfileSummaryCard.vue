@@ -5,6 +5,11 @@ import type { UserProfile } from '../../types/community'
 
 defineProps<{
   profile: UserProfile
+  actionLabel?: string
+}>()
+
+const emit = defineEmits<{
+  action: []
 }>()
 </script>
 
@@ -21,6 +26,7 @@ defineProps<{
     <div class="profile-summary__badges">
       <span v-for="badge in profile.badges" :key="badge" class="profile-badge">{{ badge }}</span>
     </div>
+    <button v-if="actionLabel" class="primary-button" type="button" @click="emit('action')">{{ actionLabel }}</button>
     <MetricList class="profile-summary__stats" :items="profile.stats" />
     <div class="profile-summary__traits">
       <div>

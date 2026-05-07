@@ -61,9 +61,11 @@ export interface TopbarMessage {
   title: string
   content: string
   publishTime: string
-  type: 'comment' | 'like' | 'favorite' | 'system'
+  type: 'comment' | 'like' | 'favorite' | 'system' | 'chat'
   isRead: boolean
   postId?: number
+  conversationId?: number
+  badgeText?: string
   route?: {
     name: 'home' | 'games' | 'profile'
     query?: Record<string, string>
@@ -115,6 +117,7 @@ export interface ProfileStats {
 }
 
 export interface UserProfile {
+  id?: number
   name: string
   handle: string
   bio: string

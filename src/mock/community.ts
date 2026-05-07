@@ -320,6 +320,7 @@ export const comments: CommentItem[] = [
 ]
 
 export const userProfile: UserProfile = {
+  id: 999,
   name: '小番茄站长',
   handle: '@tomato_player',
   bio: '热爱独立游戏、联机合作与社区内容策划，喜欢把攻略和体验写成能帮到别人的帖子。',

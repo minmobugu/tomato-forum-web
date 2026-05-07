@@ -22,7 +22,8 @@ const router = createRouter({
       component: () => import('../views/games/GamesView.vue'),
     },
     {
-      path: '/messages',
+      path: '/notifications',
+      alias: '/messages',
       name: 'messages',
       component: () => import('../views/messages/MessagesView.vue'),
       meta: { requiresAuth: true },

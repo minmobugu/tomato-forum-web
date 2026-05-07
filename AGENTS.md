@@ -31,7 +31,9 @@
 - `npx vitest run src/test/community.spec.ts`：单独运行当前测试文件
 
 ## 提交规范
-- Git 提交信息必须全部使用英文
+- Git commit message 必须统一采用 Conventional Commits 规范，并使用全英文编写
+- 统一格式：`<type>(<scope>): <subject>`
+- 采用该规范的目的包括：提高 Commit 可读性、区分功能开发和 Bug 修复等类型、支持自动生成 Changelog、支持版本发布自动化、提高多人协作效率
 
 ## 项目结构
 大部分应用代码位于 `src/` 目录下。
@@ -107,7 +109,7 @@
 
 ## Agent 协作要求
 - 需求文档统一存放在工作区根目录的 `../docs/tasks`
-- 接口文档统一存放在 `../docs/contracts/openapi.yaml`
+- 接口文档按微服务存放在 `../docs/contracts/<微服务名>/openapi.yaml`，当前已存在认证服务文档 `../docs/contracts/tomato-auth/openapi.yaml`
 - 开发任何需求前，必须先阅读并遵循对应的需求文档，不得脱离需求文档自行扩展或偏离实现
 - 进行较大改动前，必须一并检查相关的 Store、Service、Type 和 View 文件，很多行为是跨层协同设计的
 - 将该应用视为 mock-first 项目，除非需求明确要求，否则不要假设存在真实后端

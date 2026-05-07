@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="post-card__author">
+  <RouterLink :to="{ name: 'profile', query: { userId: String(author.id) } }" class="post-card__author">
     <div class="post-card__avatar-wrap">
       <img :src="author.avatar" :alt="author.name" />
       <span v-if="author.isOnline" class="post-card__online-dot"></span>
@@ -16,5 +16,5 @@ defineProps<{
       <strong>{{ author.name }}</strong>
       <span>{{ author.level }}</span>
     </div>
-  </div>
+  </RouterLink>
 </template>

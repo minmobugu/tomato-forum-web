@@ -14,6 +14,7 @@ const iconMap: Record<TopbarMessage['type'], string> = {
   like: '赞',
   favorite: '藏',
   system: '新',
+  chat: '聊',
 }
 </script>
 
@@ -40,7 +41,10 @@ const iconMap: Record<TopbarMessage['type'], string> = {
         <div class="topbar-message-panel__copy">
           <div class="topbar-message-panel__title-row">
             <strong>{{ message.title }}</strong>
-            <time>{{ message.publishTime }}</time>
+            <div class="topbar-message-panel__title-meta">
+              <time>{{ message.publishTime }}</time>
+              <span v-if="message.badgeText" class="topbar-badge">{{ message.badgeText }}</span>
+            </div>
           </div>
           <p>{{ message.content }}</p>
         </div>
